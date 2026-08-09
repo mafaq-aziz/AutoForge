@@ -51,8 +51,11 @@ class VehicleVariant(BaseModel):
 
     model: VehicleModel
     trim_name: str = Field(min_length=1)
-    # Body and mass (SI)
+    # Body and dimensions (SI)
     kerb_mass_kg: float = Field(gt=0, description="Mass without cargo or occupants")
+    length_m: float = Field(gt=0)
+    width_m: float = Field(gt=0)
+    height_m: float = Field(gt=0)
     frontal_area_m2: float = Field(gt=0)
     drag_coefficient: float = Field(gt=0, lt=1.5)
     passenger_capacity: int = Field(ge=1, le=9)
@@ -67,3 +70,4 @@ class VehicleVariant(BaseModel):
     range_target_km: float = Field(
         gt=0, description="WLTP-like target; validated by powertrain later"
     )
+    target_0_100_kmh_s: float = Field(gt=0, description="Target 0-100 km/h time in seconds")

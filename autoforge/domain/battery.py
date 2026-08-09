@@ -32,6 +32,9 @@ class BatteryPack(BaseModel):
 
     chemistry: CellChemistry
     nominal_energy_kwh: float = Field(gt=0, description="Total pack energy at 100% SOC")
+    usable_energy_kwh: float = Field(
+        gt=0, description="Energy usable between SOC bounds; basis for SOC and range"
+    )
     nominal_voltage_v: float = Field(gt=0, description="Pack terminal voltage at nominal SOC")
     max_voltage_v: float = Field(gt=0, description="Upper terminal voltage limit (full charge)")
     min_voltage_v: float = Field(gt=0, description="Lower terminal voltage limit (cutoff)")
@@ -49,6 +52,8 @@ class BatteryPack(BaseModel):
     def _voltage_ordering(self) -> BatteryPack:
         if not (self.min_voltage_v < self.nominal_voltage_v < self.max_voltage_v):
             raise ValueError("voltage ordering violated: min < nominal < max")
+        if not 0.0 < self.usable_energy_kwh <= self.nominal_energy_kwh:
+            raise ValueError("usable energy must be positive and no more than nominal energy")
         return self
 
     @property

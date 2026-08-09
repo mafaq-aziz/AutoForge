@@ -42,6 +42,7 @@ def build_demo_variant() -> VehicleVariant:
     pack = BatteryPack(
         chemistry=CellChemistry.NMC,
         nominal_energy_kwh=77.0,
+        usable_energy_kwh=75.0,
         nominal_voltage_v=400.0,
         max_voltage_v=450.0,
         min_voltage_v=300.0,
@@ -71,6 +72,9 @@ def build_demo_variant() -> VehicleVariant:
         model=model,
         trim_name="Long Range",
         kerb_mass_kg=1900.0,
+        length_m=4.9,
+        width_m=1.88,
+        height_m=1.45,
         frontal_area_m2=2.30,
         drag_coefficient=0.23,
         passenger_capacity=5,
@@ -81,6 +85,7 @@ def build_demo_variant() -> VehicleVariant:
         base_price_eur=45_000.0,
         variable_cost_eur=32_000.0,
         range_target_km=550.0,
+        target_0_100_kmh_s=5.9,
     )
 
 
