@@ -1,0 +1,12 @@
+AutoForge
+Copyright (c) 2026 AutoForge contributors
+
+This product includes software developed by third parties:
+
+- NumPy (BSD-3-Clause): https://numpy.org
+- SciPy (BSD-3-Clause): https://scipy.org
+- pandas (BSD-3-Clause): https://pandas.pydata.org
+- Pydantic (MIT): https://docs.pydantic.dev
+
+Full license texts are available in the package distributions and at the
+projects' respective repositories.
