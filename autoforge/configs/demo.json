@@ -1,0 +1,7 @@
+{
+  "demo": "foundation",
+  "seed": 42,
+  "days": 30,
+  "step_days": 1.0,
+  "notes": "Reference configuration for the foundation demo. Seeds are pinned so runs are reproducible."
+}
