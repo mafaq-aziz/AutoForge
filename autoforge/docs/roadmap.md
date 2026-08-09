@@ -11,8 +11,8 @@ integrated. Nothing here claims production readiness.
 | 0 | Foundation: structure, tooling, docs, configs | done |
 | 1 | Domain models (company, vehicle, battery, motor) | done (core set) |
 | 2 | Simulation engine (clock, RNG, events, engine, logging, run records) | done |
-| 3 | Vehicle product designer (models/variants config) | planned |
-| 4 | EV powertrain (energy use, SOC, range, power, regen, thermal) | planned |
+| 3 | Vehicle product designer (models/variants config) | done (model layer: dimensions + target performance on `VehicleVariant`; config-driven designer still later) |
+| 4 | EV powertrain (energy use, SOC, range, power, regen) | done |
 | 5 | Battery/BMS (SOC, SOH, voltage, current, temperature, degradation) | planned |
 | 6 | Smart factory (stations, queues, bottlenecks, defects, inventory) | planned |
 | 7 | Connected fleet (telemetry, faults, maintenance, ADAS events) | planned |
@@ -39,7 +39,8 @@ integrated. Nothing here claims production readiness.
 
 ## Next milestone
 
-Phase 3 + Phase 4: the **vehicle product designer** and **EV powertrain**
-subsystem — the first real physics module on top of the engine, validating the
-domain models end to end (range vs target, energy use, SOC over a drive
-cycle).
+Phase 5 + Phase 6: the **battery/BMS** and **smart factory** subsystems — BMS
+deepens the powertrain model (cell voltage/current, temperature, degradation,
+SOH), and the factory starts the production side of the core loop. Both follow
+the same pattern: validated models, deterministic subsystems on the engine,
+unit tests plus a documented reference scenario.

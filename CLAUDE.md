@@ -33,6 +33,13 @@ make demo       # python -m autoforge.scripts.demo_foundation
   through `SeededRng`; events go through `EventQueue`; subsystems implement
   `step(ctx, dt_days)` and emit structured events via `ctx.emit(...)`. Do not
   add unseeded randomness or global mutable state.
+- **Powertrain** rules: energy is always conserved (SOC change × usable energy
+  equals net energy); regen energy is never created — unstoreable regen is
+  discarded and counted in `regen_discarded_kwh`; SOC is clamped to
+  `[soc_min, soc_max]`; unmet demand sets `depleted`/`power_limited`; the model
+  is deterministic (no RNG), and everything simplified carries a
+  `SIMPLIFIED MODEL` label. See `autoforge/docs/powertrain.md` for equations
+  and the hand-derived reference cycle.
 - **Honest labels.** Label anything simplified or not yet real with
   `SIMPLIFIED MODEL`, `PLACEHOLDER`, or `TODO`. No fake AI, physics,
   benchmarks, accuracy, or real-world predictions.

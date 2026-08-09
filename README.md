@@ -28,7 +28,8 @@ module plugs into this loop instead of living in isolation.
 
 ## What exists today
 
-This is **milestone 0** (foundation). Working and tested:
+This is **milestone 1** (foundation + first physics subsystem). Working and
+tested:
 
 - **Domain models** — `Company`, `VehicleModel`, `VehicleVariant`, `BatteryPack`,
   `Motor` as typed, validated, immutable Pydantic models with explicit units.
@@ -36,20 +37,29 @@ This is **milestone 0** (foundation). Working and tested:
   discrete-event queue, a subsystem protocol, structured event logging, and a
   `SimulationRun` record that captures seed, config, version, timestamps, and
   results for reproducibility.
+- **Driving scenarios** — validated time/speed/grade profiles
+  (`DrivingScenario`) plus builders for constant-speed and a documented
+  reference highway cycle.
+- **EV powertrain** — `PowertrainSubsystem`/`PowertrainSimulator` with a
+  `PowertrainConfig`: longitudinal force, motor/drivetrain/regen efficiencies,
+  auxiliary load, battery C-rate limits, SOC floors, regen accounting, energy
+  conservation, power limiting, and battery depletion events. Deterministic
+  (no randomness) and reproducible per (vehicle, scenario, config, version).
 
-Everything else on the roadmap below is planned, not built. Nothing here makes
-claims about real vehicles or markets.
+Everything else on the roadmap below is planned, not built. The powertrain is
+a `SIMPLIFIED MODEL` — constant efficiencies, no thermal/HVAC — and nothing
+here makes claims about real vehicles or markets.
 
 ## Repository layout
 
 ```
 autoforge/
 ├── apps/          # entry points: web frontend (later), simulation backend
-├── domain/        # typed domain models (company, vehicle, battery, motor, ...)
-├── services/      # service layer (powertrain, ADAS, factory, fleet, ...) [later]
+├── domain/        # typed domain models (company, vehicle, battery, motor, scenario)
+├── services/      # service layer (powertrain implemented; ADAS, factory, fleet later)
 ├── simulation/    # engine foundation: clock, RNG, events, engine, logging
 ├── ml/            # ML modules, only where justified [later]
-├── data/          # data loaders and generated datasets [later]
+├── data/          # scenario builders and reference cycles
 ├── tests/         # pytest suite
 ├── docs/          # design documentation and roadmap
 ├── scripts/       # CLI entry points
@@ -78,6 +88,17 @@ The demo creates a company and a vehicle variant, runs a month of simulated
 time with a scheduled mid-run event, and prints the run record and event log.
 Same seed reproduces the same run id and event log.
 
+## Running the powertrain demo
+
+```bash
+python -m autoforge.scripts.demo_powertrain
+```
+
+The demo simulates the demo vehicle over the documented reference highway
+cycle (10 min at 108 km/h) and prints energy consumed/recovered, consumption
+per km, estimated range, peak battery power, and final SOC. The expected
+values are derived by hand in [docs/powertrain.md](autoforge/docs/powertrain.md).
+
 ## Testing, linting, type checking
 
 ```bash
@@ -91,16 +112,22 @@ make check     # everything
 ## Roadmap
 
 See [docs/roadmap.md](autoforge/docs/roadmap.md) for the phase-by-phase plan.
-Implemented phases are marked; the simulator is currently at **Phase 2**
-(domain models + simulation foundation).
+Implemented phases are marked; the simulator is currently at **Phase 4**
+(domain models + simulation foundation + EV powertrain).
 
 ## Assumptions and limitations
 
-- Simulation time advances in fixed day steps; fast dynamics (powertrain,
-  ADAS) convert to SI seconds internally when they arrive.
+- Simulation time advances in fixed day steps; fast dynamics (powertrain)
+  convert to SI seconds internally and the engine steps at the scenario
+  timestep.
 - Randomness comes from a single seeded stream per run; identical seed +
-  config + version reproduces identical results. Per-subsystem streams are a
-  deliberate future improvement for debugging isolation.
+  config + version reproduces identical results. The powertrain is fully
+  deterministic — only its run id depends on the seed.
+- The powertrain is a `SIMPLIFIED MODEL`: constant motor/drivetrain/regen
+  efficiencies, constant auxiliary load, no thermal/HVAC, no cell imbalance,
+  no internal battery losses. Estimated range is a simple division, not a
+  certification or real-world figure. See
+  [docs/powertrain.md](autoforge/docs/powertrain.md).
 - Market, finance, ML, and AI modules will be **explicitly simulated** — they
   make no real-world forecasting claims.
 
