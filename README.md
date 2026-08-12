@@ -99,6 +99,39 @@ cycle (10 min at 108 km/h) and prints energy consumed/recovered, consumption
 per km, estimated range, peak battery power, and final SOC. The expected
 values are derived by hand in [docs/powertrain.md](autoforge/docs/powertrain.md).
 
+## Example vehicle and simulation
+
+`autoforge.apps.simulation.demo.build_demo_variant()` returns the example
+"Long Range" variant of the Aurora model:
+
+| Parameter | Value |
+| --- | --- |
+| Segment / mass | Sedan, 1900 kg kerb |
+| Dimensions | 4.90 x 1.88 x 1.45 m, 2.30 m2 frontal, Cd 0.23 |
+| Battery | NMC, 77 kWh nominal, 75 kWh usable, 400 V |
+| Motor | 230 kW peak / 150 kW continuous |
+| Targets | 550 km range, 0-100 km/h in 5.9 s |
+
+Simulate it programmatically:
+
+```python
+from autoforge.apps.simulation.demo import build_demo_variant
+from autoforge.data.scenarios import reference_highway_cycle
+from autoforge.services.vehicle.powertrain import PowertrainSimulator
+
+result = PowertrainSimulator(
+    variant=build_demo_variant(),
+    scenario=reference_highway_cycle(),
+    seed=0,
+).simulate()
+
+print(result.result.summary)          # typed SimulationResult summary
+print(result.run)                     # SimulationRun: seed, config, version
+```
+
+The same inputs always give the same result: the powertrain draws no
+randomness, so the run id and the physics both reproduce exactly.
+
 ## Testing, linting, type checking
 
 ```bash

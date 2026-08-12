@@ -5,8 +5,8 @@ fires one scheduled event mid-run, and returns the run record plus the events
 logged. This exercises the reproducibility contract end to end: the same seed
 reproduces the same log.
 
-The vehicle variant here is only a specification object; range and performance
-validation arrive with the EV powertrain phase.
+The vehicle variant is also the input to the EV powertrain (see the powertrain
+demo and scripts/demo_powertrain.py); range and energy are validated there.
 """
 
 from __future__ import annotations
