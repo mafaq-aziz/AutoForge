@@ -48,6 +48,14 @@ make demo       # python -m autoforge.scripts.demo_foundation
   lumped I²R heat with Newton cooling, SOH is a linear energy-throughput
   baseline, and faults are deterministic threshold rules (no ML, no synthetic
   fault data). No randomness. See `autoforge/docs/battery.md`.
+- **Factory** rules: the factory runs orders through a configured line as
+  discrete items on a one-day time slice via the shared engine; all stochastic
+  behavior (defects, downtime, rework-vs-scrap) flows through `SeededRng` and
+  must reproduce per (config, orders, seed, version). Defects are caught at
+  QC and PASS/REWORK/FAIL'd; inventory shortages starve stations
+  (`WAITING_FOR_MATERIAL`); the bottleneck is derived from utilization
+  metrics, not assumed. The default line's bottleneck is 10/day. See
+  `autoforge/docs/factory.md`.
 - **Honest labels.** Label anything simplified or not yet real with
   `SIMPLIFIED MODEL`, `PLACEHOLDER`, or `TODO`. No fake AI, physics,
   benchmarks, accuracy, or real-world predictions.

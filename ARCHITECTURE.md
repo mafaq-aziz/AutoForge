@@ -24,10 +24,11 @@ graph TD
   subsystem protocol, structured logging, and run records.
 - **services/** — subsystems that implement `step(ctx, dt_days)` and emit
   structured events. `services/vehicle/powertrain.py` is implemented
-  (longitudinal force, energy, SOC, regen, power limiting) and
-  `services/battery/` adds the BMS-style electrical/thermal/degradation/fault
-  view over powertrain results; ADAS, factory, fleet, market, and finance land
-  in later phases.
+  (longitudinal force, energy, SOC, regen, power limiting), `services/battery/`
+  adds the BMS-style electrical/thermal/degradation/fault view over powertrain
+  results, and `services/factory/` runs production orders through a line with
+  seeded defects, downtime, and material shortages; ADAS, fleet, market, and
+  finance land in later phases.
 - **apps/** — runnable entry points: the headless simulation app today, a
   FastAPI backend and web dashboard later.
 - **ml/** — only ML modules that have been evaluated on data; classical methods
@@ -103,6 +104,19 @@ integration is reported only as a `max_soc_error` consistency check. All of it
 is deterministic (no RNG) and described in
 [docs/battery.md](autoforge/docs/battery.md).
 
+## Smart factory
+
+`services/factory/` is the first subsystem with seeded stochastic behavior. A
+configured line (RAW -> BATTERY -> BODY -> PAINT -> POWERTRAIN ->
+FINAL_ASSEMBLY -> QUALITY_INSPECTION) processes `ProductionOrder`s as discrete
+`WorkItem`s on a one-day time slice, with per-station capacity, cycle time,
+defects (flagged at stations, resolved at QC as pass/rework/scrap), downtime,
+and material consumption from inventory. Metrics (utilization) identify the
+bottleneck rather than assuming it. Finished vehicles are typed
+`FinishedVehicle` records that the fleet phase consumes. Determinism comes
+from the shared seeded RNG; equations and the hand-calculable reference are in
+[docs/factory.md](autoforge/docs/factory.md).
+
 ## Units and validation
 
 - Domain models are **frozen** and validated at construction; nonsense
@@ -117,10 +131,9 @@ is deterministic (no RNG) and described in
 
 1. **Phase 3-4 (done)**: vehicle designer model layer + EV powertrain as the
    first real physics subsystem, exercising the engine end to end.
-2. **Phase 5 (done)**: BMS-style battery model over powertrain results
-   (electrical, thermal, degradation, faults).
-3. **Phase 6-7**: smart factory (production side of the loop) then connected
-   fleet with telemetry and fleet analytics.
+2. **Phase 5-6 (done)**: BMS-style battery model over powertrain results, then
+   the smart factory (production side of the loop).
+3. **Phase 7**: connected fleet with telemetry and fleet analytics.
 4. **apps/web**: React dashboard on top of the FastAPI app; the dashboard only
    reads what the simulation actually produces.
 5. Microservices, ROS2, CARLA, MQTT/Kafka, Redis, CUDA, or cloud services will

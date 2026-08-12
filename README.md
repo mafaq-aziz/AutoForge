@@ -28,8 +28,8 @@ module plugs into this loop instead of living in isolation.
 
 ## What exists today
 
-This is **milestone 2** (foundation + first physics subsystems). Working and
-tested:
+This is **milestone 3** (foundation + vehicle physics + production). Working
+and tested:
 
 - **Domain models** — `Company`, `VehicleModel`, `VehicleVariant`, `BatteryPack`,
   `Motor` as typed, validated, immutable Pydantic models with explicit units.
@@ -50,11 +50,19 @@ tested:
   heating with Newton cooling, energy-throughput SOH degradation, and
   deterministic threshold faults. The powertrain stays authoritative for
   SOC/energy; the battery SOC is a consistency check.
+- **Smart factory** — `FactorySimulator` runs production orders through a
+  configured line (RAW -> BATTERY -> BODY -> PAINT -> POWERTRAIN ->
+  FINAL_ASSEMBLY -> QC) as discrete items with per-station capacity, cycle
+  time, seeded defects and downtime, material consumption/shortages, and
+  PASS/REWORK/FAIL quality inspections. Bottleneck is derived from utilization
+  metrics, and vehicles that pass QC become `FinishedVehicle`s with a cost
+  tally (variable + rework + scrap).
 
-Everything else on the roadmap below is planned, not built. The powertrain and
-battery are `SIMPLIFIED MODEL`s — constant efficiencies, no electrochemical
-cell physics, no calendar aging — and nothing here makes claims about real
-vehicles or markets.
+Everything else on the roadmap below is planned, not built. The powertrain,
+battery, and factory are `SIMPLIFIED MODEL`s — constant efficiencies, no
+electrochemical cell physics, no calendar aging, no shift calendars or supply
+chains — and nothing here makes claims about real vehicles, factories, or
+markets.
 
 ## Repository layout
 
@@ -62,7 +70,7 @@ vehicles or markets.
 autoforge/
 ├── apps/          # entry points: web frontend (later), simulation backend
 ├── domain/        # typed domain models (company, vehicle, battery, motor, scenario)
-├── services/      # service layer (powertrain, battery; ADAS, factory, fleet later)
+├── services/      # service layer (powertrain, battery, factory; ADAS, fleet later)
 ├── simulation/    # engine foundation: clock, RNG, events, engine, logging
 ├── ml/            # ML modules, only where justified [later]
 ├── data/          # scenario builders and reference cycles
@@ -117,6 +125,19 @@ equivalent full cycles, fault counts, and the SOC consistency check against
 the powertrain. Equations and the hand-derived reference values are in
 [docs/battery.md](autoforge/docs/battery.md).
 
+## Running the factory demo
+
+```bash
+python -m autoforge.scripts.demo_factory [--days 12] [--quantity 30] [--enable-defects]
+```
+
+The demo releases a single order for the Aurora onto the default line and
+prints finished vehicles, scrap/rework, the utilization-derived bottleneck,
+cost, and per-station metrics. `--enable-defects` adds seeded paint defects and
+battery downtime to show the stochastic side (still reproducible per seed).
+Reference values are derived by hand in
+[docs/factory.md](autoforge/docs/factory.md).
+
 ## Example vehicle and simulation
 
 `autoforge.apps.simulation.demo.build_demo_variant()` returns the example
@@ -167,8 +188,9 @@ make check     # everything
 ## Roadmap
 
 See [docs/roadmap.md](autoforge/docs/roadmap.md) for the phase-by-phase plan.
-Implemented phases are marked; the simulator is currently at **Phase 5**
-(domain models + simulation foundation + EV powertrain + battery/BMS).
+Implemented phases are marked; the simulator is currently at **Phase 6**
+(domain models + simulation foundation + EV powertrain + battery/BMS + smart
+factory).
 
 ## Assumptions and limitations
 
@@ -187,6 +209,11 @@ Implemented phases are marked; the simulator is currently at **Phase 5**
   lumped single-node thermal mass, linear energy-throughput SOH degradation
   (no calendar aging, no temperature/aging coupling), and threshold faults on
   aggregate pack quantities. See [docs/battery.md](autoforge/docs/battery.md).
+- The factory is a `SIMPLIFIED MODEL`: one-day time slicing, no shift
+  calendars or setups, scalar station capacity, FIFO queues with no WIP
+  limits, constant seeded defect/downtime rates (no real quality data), and a
+  cost tally limited to variable + rework + scrap. See
+  [docs/factory.md](autoforge/docs/factory.md).
 - Market, finance, ML, and AI modules will be **explicitly simulated** — they
   make no real-world forecasting claims.
 

@@ -14,7 +14,7 @@ integrated. Nothing here claims production readiness.
 | 3 | Vehicle product designer (models/variants config) | done (model layer: dimensions + target performance on `VehicleVariant`; config-driven designer still later) |
 | 4 | EV powertrain (energy use, SOC, range, power, regen) | done |
 | 5 | Battery/BMS (SOC, SOH, voltage, current, temperature, degradation) | done |
-| 6 | Smart factory (stations, queues, bottlenecks, defects, inventory) | planned |
+| 6 | Smart factory (stations, queues, bottlenecks, defects, inventory) | done |
 | 7 | Connected fleet (telemetry, faults, maintenance, ADAS events) | planned |
 | 8 | ADAS and driver monitoring (perception vs decision separation) | planned |
 | 9 | Factory robotics (arm, pick-and-place, motion planning) | planned |
@@ -39,7 +39,7 @@ integrated. Nothing here claims production readiness.
 
 ## Next milestone
 
-Phase 6: the **smart factory** — stations, queues, bottlenecks, defects, and
-inventory for the production side of the core loop, following the same pattern
-as the battery phase: validated models, deterministic subsystems on the engine,
-unit tests plus a documented reference scenario.
+Phase 7: the **connected fleet** — finished vehicles enter a fleet, drive
+scenarios, stream telemetry, and produce fleet analytics. It closes the loop
+from FACTORY -> VEHICLE -> DATA by consuming the factory's `FinishedVehicle`s
+and the powertrain/battery physics for each vehicle operation.
