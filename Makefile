@@ -6,16 +6,16 @@ test:
 	python3 -m pytest
 
 lint:
-	ruff check autoforge
+	ruff check .
 
 format:
-	ruff format autoforge
+	ruff format .
 
 typecheck:
 	mypy autoforge
 
 check: lint
-	ruff format --check autoforge
+	ruff format --check .
 	mypy autoforge
 	python3 -m pytest
 

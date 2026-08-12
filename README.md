@@ -125,8 +125,8 @@ result = PowertrainSimulator(
     seed=0,
 ).simulate()
 
-print(result.result.summary)          # typed SimulationResult summary
-print(result.run)                     # SimulationRun: seed, config, version
+print(result.result.summary)  # typed SimulationResult summary
+print(result.run)  # SimulationRun: seed, config, version
 ```
 
 The same inputs always give the same result: the powertrain draws no
