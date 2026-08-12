@@ -67,6 +67,11 @@ class TestScenario:
         with pytest.raises(ValidationError):
             DrivingScenario(time_s=[0.0, 1.0], speed_mps=[1.0, 1.0], grade_fraction=[0.0, 1.5])
 
+    def test_grade_bounds_are_inclusive(self) -> None:
+        # A grade fraction of +/-1.0 (45 degrees) is the documented extreme.
+        DrivingScenario(time_s=[0.0, 1.0], speed_mps=[1.0, 1.0], grade_fraction=[1.0, 1.0])
+        DrivingScenario(time_s=[0.0, 1.0], speed_mps=[1.0, 1.0], grade_fraction=[-1.0, -1.0])
+
     def test_zero_timestep_rejected(self) -> None:
         with pytest.raises(ValidationError):
             DrivingScenario(time_s=[0.0, 0.0], speed_mps=[1.0, 1.0], grade_fraction=[0.0, 0.0])

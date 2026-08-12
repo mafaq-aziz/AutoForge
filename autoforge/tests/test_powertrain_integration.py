@@ -163,6 +163,48 @@ class TestScenarioBehavior:
         assert all(p.depleted for p in result.trajectory)
 
 
+class TestEdgeCases:
+    def test_sudden_acceleration_capped_by_motor_peak(self) -> None:
+        # 0 -> 30 m/s in one second (a = 30 m/s2) then hold at 30.
+        scenario = DrivingScenario(
+            name="sudden_accel",
+            time_s=[0.0, 1.0, 2.0, 3.0],
+            speed_mps=[0.0, 30.0, 30.0, 30.0],
+            grade_fraction=[0.0, 0.0, 0.0, 0.0],
+        )
+        variant = build_demo_variant()
+        config = PowertrainConfig()
+        outcome = _simulate(variant=variant, scenario=scenario, config=config)
+        s = outcome.result.summary
+        # The first interval demands ~983 kW of wheel power and is clamped to
+        # the 230 kW motor; the next two are ordinary cruise.
+        assert s.power_limited_seconds == pytest.approx(1.0)
+        assert s.peak_power_kw == pytest.approx(
+            variant.motor.peak_power_kw + config.auxiliary_power_kw
+        )
+        assert outcome.result.trajectory[0].power_limited is True
+        assert outcome.result.trajectory[1].power_limited is False
+
+    def test_steep_uphill_consumes_far_more_than_flat(self) -> None:
+        # 30 s at 20 m/s on a 30% grade vs flat; hand-derived values.
+        flat = _simulate(scenario=constant_speed_scenario(duration_s=30.0, speed_mps=20.0)).result
+        uphill = _simulate(
+            scenario=constant_speed_scenario(duration_s=30.0, speed_mps=20.0, grade_fraction=0.3)
+        ).result
+        assert flat.summary.energy_consumed_kwh == pytest.approx(0.0688, rel=1e-3)
+        assert uphill.summary.energy_consumed_kwh == pytest.approx(1.0885, rel=1e-3)
+        assert uphill.summary.energy_consumed_kwh > 10.0 * flat.summary.energy_consumed_kwh
+
+    def test_very_short_simulation_at_zero_distance(self) -> None:
+        outcome = _simulate(
+            scenario=constant_speed_scenario(duration_s=1.0, speed_mps=0.0, name="still")
+        )
+        s = outcome.result.summary
+        assert outcome.run.steps == 1
+        assert s.distance_km == pytest.approx(0.0)
+        assert s.estimated_range_km is None
+
+
 class TestTimestepAndRobustness:
     def test_constant_speed_is_timestep_invariant(self) -> None:
         dt1 = _simulate(scenario=constant_speed_scenario(duration_s=600.0, speed_mps=30.0)).result
