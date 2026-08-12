@@ -24,8 +24,10 @@ graph TD
   subsystem protocol, structured logging, and run records.
 - **services/** — subsystems that implement `step(ctx, dt_days)` and emit
   structured events. `services/vehicle/powertrain.py` is implemented
-  (longitudinal force, energy, SOC, regen, power limiting); BMS, ADAS, factory,
-  fleet, market, and finance land in later phases.
+  (longitudinal force, energy, SOC, regen, power limiting) and
+  `services/battery/` adds the BMS-style electrical/thermal/degradation/fault
+  view over powertrain results; ADAS, factory, fleet, market, and finance land
+  in later phases.
 - **apps/** — runnable entry points: the headless simulation app today, a
   FastAPI backend and web dashboard later.
 - **ml/** — only ML modules that have been evaluated on data; classical methods
@@ -90,6 +92,17 @@ discarded and counted in `regen_discarded_kwh`. Results are returned as a typed
 `SimulationRun`. Equations, assumptions, and hand-derived reference values live
 in [docs/powertrain.md](autoforge/docs/powertrain.md).
 
+## Battery / BMS
+
+`services/battery/` consumes a completed `PowertrainSimulation` and adds the
+BMS-style view per interval: linear-OCV current/voltage with an IR drop (V*I ==
+P exactly on the physical branch), lumped I²R heating with Newton cooling,
+energy-throughput SOH degradation, and deterministic threshold faults. The
+powertrain stays authoritative for SOC/energy; the battery's own SOC
+integration is reported only as a `max_soc_error` consistency check. All of it
+is deterministic (no RNG) and described in
+[docs/battery.md](autoforge/docs/battery.md).
+
 ## Units and validation
 
 - Domain models are **frozen** and validated at construction; nonsense
@@ -104,11 +117,13 @@ in [docs/powertrain.md](autoforge/docs/powertrain.md).
 
 1. **Phase 3-4 (done)**: vehicle designer model layer + EV powertrain as the
    first real physics subsystem, exercising the engine end to end.
-2. **Phase 5-6**: BMS and smart factory — BMS deepens the powertrain model,
-   the factory starts the production side of the loop.
-3. **apps/web**: React dashboard on top of the FastAPI app; the dashboard only
+2. **Phase 5 (done)**: BMS-style battery model over powertrain results
+   (electrical, thermal, degradation, faults).
+3. **Phase 6-7**: smart factory (production side of the loop) then connected
+   fleet with telemetry and fleet analytics.
+4. **apps/web**: React dashboard on top of the FastAPI app; the dashboard only
    reads what the simulation actually produces.
-4. Microservices, ROS2, CARLA, MQTT/Kafka, Redis, CUDA, or cloud services will
+5. Microservices, ROS2, CARLA, MQTT/Kafka, Redis, CUDA, or cloud services will
    only be added when a concrete requirement justifies them — not for prestige.
 
 ## Safety boundary

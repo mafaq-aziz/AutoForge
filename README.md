@@ -28,7 +28,7 @@ module plugs into this loop instead of living in isolation.
 
 ## What exists today
 
-This is **milestone 1** (foundation + first physics subsystem). Working and
+This is **milestone 2** (foundation + first physics subsystems). Working and
 tested:
 
 - **Domain models** — `Company`, `VehicleModel`, `VehicleVariant`, `BatteryPack`,
@@ -45,10 +45,16 @@ tested:
   auxiliary load, battery C-rate limits, SOC floors, regen accounting, energy
   conservation, power limiting, and battery depletion events. Deterministic
   (no randomness) and reproducible per (vehicle, scenario, config, version).
+- **Battery / BMS** — `BatterySimulator` runs the BMS-style view over any
+  powertrain result: linear-OCV current/voltage with an IR drop, lumped I²R
+  heating with Newton cooling, energy-throughput SOH degradation, and
+  deterministic threshold faults. The powertrain stays authoritative for
+  SOC/energy; the battery SOC is a consistency check.
 
-Everything else on the roadmap below is planned, not built. The powertrain is
-a `SIMPLIFIED MODEL` — constant efficiencies, no thermal/HVAC — and nothing
-here makes claims about real vehicles or markets.
+Everything else on the roadmap below is planned, not built. The powertrain and
+battery are `SIMPLIFIED MODEL`s — constant efficiencies, no electrochemical
+cell physics, no calendar aging — and nothing here makes claims about real
+vehicles or markets.
 
 ## Repository layout
 
@@ -56,7 +62,7 @@ here makes claims about real vehicles or markets.
 autoforge/
 ├── apps/          # entry points: web frontend (later), simulation backend
 ├── domain/        # typed domain models (company, vehicle, battery, motor, scenario)
-├── services/      # service layer (powertrain implemented; ADAS, factory, fleet later)
+├── services/      # service layer (powertrain, battery; ADAS, factory, fleet later)
 ├── simulation/    # engine foundation: clock, RNG, events, engine, logging
 ├── ml/            # ML modules, only where justified [later]
 ├── data/          # scenario builders and reference cycles
@@ -99,6 +105,18 @@ cycle (10 min at 108 km/h) and prints energy consumed/recovered, consumption
 per km, estimated range, peak battery power, and final SOC. The expected
 values are derived by hand in [docs/powertrain.md](autoforge/docs/powertrain.md).
 
+## Running the battery demo
+
+```bash
+python -m autoforge.scripts.demo_battery [--show-trajectory]
+```
+
+The demo runs the powertrain over the same reference cycle and then adds the
+battery view: pack current/voltage, temperature rise, SOH, throughput,
+equivalent full cycles, fault counts, and the SOC consistency check against
+the powertrain. Equations and the hand-derived reference values are in
+[docs/battery.md](autoforge/docs/battery.md).
+
 ## Example vehicle and simulation
 
 `autoforge.apps.simulation.demo.build_demo_variant()` returns the example
@@ -117,20 +135,24 @@ Simulate it programmatically:
 ```python
 from autoforge.apps.simulation.demo import build_demo_variant
 from autoforge.data.scenarios import reference_highway_cycle
+from autoforge.services.battery.model import BatterySimulator
 from autoforge.services.vehicle.powertrain import PowertrainSimulator
 
-result = PowertrainSimulator(
-    variant=build_demo_variant(),
+variant = build_demo_variant()
+powertrain = PowertrainSimulator(
+    variant=variant,
     scenario=reference_highway_cycle(),
     seed=0,
 ).simulate()
+battery = BatterySimulator(variant).simulate(powertrain)
 
-print(result.result.summary)  # typed SimulationResult summary
-print(result.run)  # SimulationRun: seed, config, version
+print(powertrain.result.summary)  # typed SimulationResult summary
+print(battery.summary)  # BatterySummary: SOH, temperature, faults, soc error
+print(powertrain.run)  # SimulationRun: seed, config, version
 ```
 
-The same inputs always give the same result: the powertrain draws no
-randomness, so the run id and the physics both reproduce exactly.
+The same inputs always give the same result: the powertrain and battery draw
+no randomness, so the run id and the physics both reproduce exactly.
 
 ## Testing, linting, type checking
 
@@ -145,8 +167,8 @@ make check     # everything
 ## Roadmap
 
 See [docs/roadmap.md](autoforge/docs/roadmap.md) for the phase-by-phase plan.
-Implemented phases are marked; the simulator is currently at **Phase 4**
-(domain models + simulation foundation + EV powertrain).
+Implemented phases are marked; the simulator is currently at **Phase 5**
+(domain models + simulation foundation + EV powertrain + battery/BMS).
 
 ## Assumptions and limitations
 
@@ -161,6 +183,10 @@ Implemented phases are marked; the simulator is currently at **Phase 4**
   no internal battery losses. Estimated range is a simple division, not a
   certification or real-world figure. See
   [docs/powertrain.md](autoforge/docs/powertrain.md).
+- The battery is a `SIMPLIFIED MODEL`: linear OCV, constant pack resistance,
+  lumped single-node thermal mass, linear energy-throughput SOH degradation
+  (no calendar aging, no temperature/aging coupling), and threshold faults on
+  aggregate pack quantities. See [docs/battery.md](autoforge/docs/battery.md).
 - Market, finance, ML, and AI modules will be **explicitly simulated** — they
   make no real-world forecasting claims.
 

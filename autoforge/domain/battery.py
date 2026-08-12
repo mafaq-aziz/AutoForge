@@ -47,6 +47,12 @@ class BatteryPack(BaseModel):
         ge=1, description="Full cycles until 80% SOH at reference conditions"
     )
     mass_kg: float = Field(gt=0)
+    min_operating_temperature_k: float = Field(
+        default=253.15, gt=200, lt=400, description="Lower bound of the operating envelope"
+    )
+    max_operating_temperature_k: float = Field(
+        default=333.15, gt=200, lt=400, description="Upper bound of the operating envelope"
+    )
 
     @model_validator(mode="after")
     def _voltage_ordering(self) -> BatteryPack:
@@ -54,6 +60,8 @@ class BatteryPack(BaseModel):
             raise ValueError("voltage ordering violated: min < nominal < max")
         if not 0.0 < self.usable_energy_kwh <= self.nominal_energy_kwh:
             raise ValueError("usable energy must be positive and no more than nominal energy")
+        if not self.min_operating_temperature_k < self.max_operating_temperature_k:
+            raise ValueError("operating temperature ordering violated: min < max")
         return self
 
     @property

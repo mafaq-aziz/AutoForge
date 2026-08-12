@@ -40,6 +40,14 @@ make demo       # python -m autoforge.scripts.demo_foundation
   is deterministic (no RNG), and everything simplified carries a
   `SIMPLIFIED MODEL` label. See `autoforge/docs/powertrain.md` for equations
   and the hand-derived reference cycle.
+- **Battery/BMS** rules: the battery layer (`autoforge/services/battery/`)
+  consumes powertrain results and never overrides them — the powertrain stays
+  authoritative for SOC/energy; the battery's own SOC is only a consistency
+  check (`max_soc_error`). Current/voltage obey `V*I == P` exactly on the
+  linear-OCV physical branch (power-limited beyond capability), temperature is
+  lumped I²R heat with Newton cooling, SOH is a linear energy-throughput
+  baseline, and faults are deterministic threshold rules (no ML, no synthetic
+  fault data). No randomness. See `autoforge/docs/battery.md`.
 - **Honest labels.** Label anything simplified or not yet real with
   `SIMPLIFIED MODEL`, `PLACEHOLDER`, or `TODO`. No fake AI, physics,
   benchmarks, accuracy, or real-world predictions.
