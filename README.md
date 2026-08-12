@@ -166,4 +166,6 @@ Implemented phases are marked; the simulator is currently at **Phase 4**
 
 ## License
 
-MIT — see [LICENSE](LICENSE). See [NOTICE](NOTICE) for third-party notices.
+Apache License 2.0 — see [LICENSE](LICENSE). Original AutoForge code is
+licensed under Apache-2.0. See [NOTICE](NOTICE) for third-party notices;
+third-party libraries keep their own licenses.
