@@ -302,3 +302,14 @@ class TestBatterySimulator:
     def test_initial_soc_validation_against_powertrain_bounds(self) -> None:
         with pytest.raises(ValueError):
             BatterySimulator(build_demo_variant()).simulate(_powertrain(), initial_soc=1.5)
+
+    def test_initial_soh_carries_degradation(self) -> None:
+        # Degradation accumulates from the carried SOH, not from a fresh 1.0:
+        # a 600 s reference drive drops SOH by about 5.2e-6 from where it starts.
+        degraded = BatterySimulator(build_demo_variant()).simulate(
+            _powertrain(), initial_soc=1.0, initial_soh=0.9
+        )
+        fresh = BatterySimulator(build_demo_variant()).simulate(_powertrain())
+        assert degraded.summary.final_soh == pytest.approx(0.9 - (1.0 - fresh.summary.final_soh))
+        assert degraded.summary.final_soh == pytest.approx(0.8999948, abs=1e-6)
+        assert degraded.summary.final_soh < 0.9

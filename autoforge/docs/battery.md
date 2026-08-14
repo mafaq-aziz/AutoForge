@@ -79,15 +79,18 @@ or age dependence of `R` or `C_th`.
 ```
 throughput_kwh += |P| * dt
 EFC = throughput_kwh / usable_energy_kwh
-SOH = clamp(1 - 0.2 * EFC / cycle_life_to_80_soh, soh_floor, 1)
+SOH = clamp(initial_soh - 0.2 * EFC / cycle_life_to_80_soh, soh_floor, 1)
 ```
 
 `EFC` counts throughput in both directions, so one full discharge-charge round
-trip is two equivalent cycles. SOH is a purely energy-throughput baseline: real
-aging depends on chemistry, temperature history, calendar time, charge profile,
-and manufacturing variance, none of which is modeled. `soh_floor` prevents SOH
-running away below a sane minimum; `soh_fault_threshold` (> `soh_floor`) is
-where the `severe_degradation` fault fires.
+trip is two equivalent cycles. `initial_soh` (default 1.0) is the SOH the drive
+starts from, so degradation carries across repeated drives: the fleet phase
+passes each day's carried SOH back in and SOH therefore accumulates. SOH is a
+purely energy-throughput baseline: real aging depends on chemistry,
+temperature history, calendar time, charge profile, and manufacturing variance,
+none of which is modeled. `soh_floor` prevents SOH running away below a sane
+minimum; `soh_fault_threshold` (> `soh_floor`) is where the
+`severe_degradation` fault fires.
 
 ## Faults
 

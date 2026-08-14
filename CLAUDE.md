@@ -56,6 +56,19 @@ make demo       # python -m autoforge.scripts.demo_foundation
   (`WAITING_FOR_MATERIAL`); the bottleneck is derived from utilization
   metrics, not assumed. The default line's bottleneck is 10/day. See
   `autoforge/docs/factory.md`.
+- **Fleet/telemetry** rules: the fleet (`autoforge/services/fleet/`) consumes
+  factory `FinishedVehicle`s and operates them day by day against a scenario on
+  the shared engine, replaying the powertrain/battery simulators per drive.
+  SOC and SOH carry between days (the battery model's SOH degradation
+  accumulates from `initial_soh`); SOC can deplete because no charging is
+  modeled, and a depleted vehicle stays off the road (`vehicle_out_of_charge`)
+  rather than "operating" at zero battery power. Telemetry is sampled from the
+  actual trajectories at a configurable interval — never fabricated. Only the
+  per-vehicle operation draw (`operation_probability`) uses `SeededRng`, so
+  (config, vehicles, scenario, seed, version) reproduces everything.
+  Maintenance is a two-line rule (any battery fault, or SOH below
+  `maintenance_soh_threshold`) with a fixed service duration. See
+  `autoforge/docs/fleet.md`.
 - **Honest labels.** Label anything simplified or not yet real with
   `SIMPLIFIED MODEL`, `PLACEHOLDER`, or `TODO`. No fake AI, physics,
   benchmarks, accuracy, or real-world predictions.

@@ -57,20 +57,26 @@ and tested:
   PASS/REWORK/FAIL quality inspections. Bottleneck is derived from utilization
   metrics, and vehicles that pass QC become `FinishedVehicle`s with a cost
   tally (variable + rework + scrap).
+- **Connected fleet** — `FleetSimulator` takes the factory's `FinishedVehicle`s
+  and operates them day by day against a scenario, replaying the powertrain and
+  battery simulators per drive. It samples battery telemetry at a configurable
+  interval, carries SOC/SOH between days, and schedules maintenance from
+  battery faults or low SOH. Outputs are typed `FleetAnalytics` with
+  availability, distance/energy, fault counts, and per-vehicle operations.
 
 Everything else on the roadmap below is planned, not built. The powertrain,
-battery, and factory are `SIMPLIFIED MODEL`s — constant efficiencies, no
+battery, factory, and fleet are `SIMPLIFIED MODEL`s — constant efficiencies, no
 electrochemical cell physics, no calendar aging, no shift calendars or supply
-chains — and nothing here makes claims about real vehicles, factories, or
-markets.
+chains, no charging model or real telemetry uplink — and nothing here makes
+claims about real vehicles, factories, or markets.
 
 ## Repository layout
 
 ```
 autoforge/
 ├── apps/          # entry points: web frontend (later), simulation backend
-├── domain/        # typed domain models (company, vehicle, battery, motor, scenario)
-├── services/      # service layer (powertrain, battery, factory; ADAS, fleet later)
+├── domain/        # typed domain models (company, vehicle, battery, motor, scenario, factory, fleet)
+├── services/      # service layer (powertrain, battery, factory, fleet; ADAS later)
 ├── simulation/    # engine foundation: clock, RNG, events, engine, logging
 ├── ml/            # ML modules, only where justified [later]
 ├── data/          # scenario builders and reference cycles
@@ -137,6 +143,18 @@ cost, and per-station metrics. `--enable-defects` adds seeded paint defects and
 battery downtime to show the stochastic side (still reproducible per seed).
 Reference values are derived by hand in
 [docs/factory.md](autoforge/docs/factory.md).
+
+## Running the fleet demo
+
+```bash
+python -m autoforge.scripts.demo_fleet [--seed 0] [--days 5] [--vehicles 3]
+```
+
+The demo builds a few vehicles in the factory, puts them in a fleet, operates
+them against the reference highway cycle, and prints fleet analytics
+(availability, distance/energy, consumption, telemetry point count, faults,
+maintenance, SOH). Reference values are derived by hand in
+[docs/fleet.md](autoforge/docs/fleet.md).
 
 ## Example vehicle and simulation
 

@@ -15,7 +15,7 @@ integrated. Nothing here claims production readiness.
 | 4 | EV powertrain (energy use, SOC, range, power, regen) | done |
 | 5 | Battery/BMS (SOC, SOH, voltage, current, temperature, degradation) | done |
 | 6 | Smart factory (stations, queues, bottlenecks, defects, inventory) | done |
-| 7 | Connected fleet (telemetry, faults, maintenance, ADAS events) | planned |
+| 7 | Connected fleet (telemetry, faults, maintenance) | done |
 | 8 | ADAS and driver monitoring (perception vs decision separation) | planned |
 | 9 | Factory robotics (arm, pick-and-place, motion planning) | planned |
 | 10 | AI quality control (vision inspection, structured defects) | planned |
@@ -39,7 +39,10 @@ integrated. Nothing here claims production readiness.
 
 ## Next milestone
 
-Phase 7: the **connected fleet** — finished vehicles enter a fleet, drive
-scenarios, stream telemetry, and produce fleet analytics. It closes the loop
-from FACTORY -> VEHICLE -> DATA by consuming the factory's `FinishedVehicle`s
-and the powertrain/battery physics for each vehicle operation.
+Phase 8: the **ADAS and driver monitoring** milestone — simulated perception vs
+decision separation on the vehicle. It builds on the fleet's data stream rather
+than introducing new product domains.
+
+Beyond that, factory robotics (9), AI quality control (10), and the market
+simulator (11) extend the PRODUCT and CUSTOMER steps of the loop; Phase 15
+closes the feedback loop from telemetry back into the next product.

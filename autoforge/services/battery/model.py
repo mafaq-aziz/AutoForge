@@ -19,7 +19,7 @@ Thermal (lumped, Newton cooling):
 Degradation (SIMPLIFIED DEGRADATION MODEL):
     throughput_kwh += |P| * dt
     EFC = throughput / usable_energy
-    SOH = clamp(1 - 0.2*EFC / cycle_life_to_80_soh, soh_floor, 1)
+    SOH = clamp(initial_soh - 0.2*EFC / cycle_life_to_80_soh, soh_floor, 1)
 
 Real battery aging depends on chemistry, cell design, temperature history,
 calendar aging, manufacturing variation, and more; none of that is modeled
@@ -77,17 +77,18 @@ def thermal_step(config: BatteryConfig, temperature_k: float, heat_w: float, dt_
 
 
 def soh_from_throughput(
-    pack: BatteryPack, config: BatteryConfig, throughput_kwh: float
+    pack: BatteryPack, config: BatteryConfig, throughput_kwh: float, initial_soh: float = 1.0
 ) -> tuple[float, float]:
     """Return (soh, equivalent_full_cycles) for a cumulative throughput.
 
     EFC counts both charge and discharge throughput against usable energy, so a
     full discharge-charge round trip is two equivalent cycles. SOH falls
-    linearly from 1.0 to 0.8 over ``cycle_life_to_80_soh`` cycles and is
-    clamped at ``soh_floor``.
+    linearly from ``initial_soh`` over ``cycle_life_to_80_soh`` cycles (0.2 loss)
+    and is clamped at ``soh_floor``. Carrying ``initial_soh`` lets a caller
+    accumulate degradation across repeated drives (the fleet does this).
     """
     efc = throughput_kwh / pack.usable_energy_kwh
-    soh = max(config.soh_floor, 1.0 - 0.2 * efc / float(pack.cycle_life_to_80_soh))
+    soh = max(config.soh_floor, initial_soh - 0.2 * efc / float(pack.cycle_life_to_80_soh))
     return soh, efc
 
 
@@ -125,6 +126,7 @@ class BatteryModel:
     def __init__(self, pack: BatteryPack, config: BatteryConfig) -> None:
         self._pack = pack
         self._config = config
+        self._initial_soh: float = 1.0
 
     def initial_state(
         self, *, soc: float = 1.0, soh: float = 1.0, time_s: float = 0.0
@@ -133,6 +135,7 @@ class BatteryModel:
             raise ValueError(f"initial soc {soc!r} outside [0, 1]")
         if not 0.0 < soh <= 1.0:
             raise ValueError(f"initial soh {soh!r} outside (0, 1]")
+        self._initial_soh = soh
         ocv = ocv_voltage(self._pack, soc)
         state = BatteryState(
             time_s=time_s,
@@ -182,7 +185,7 @@ class BatteryModel:
         temperature_k = thermal_step(self._config, state.temperature_k, heat_w, dt_s)
 
         throughput_kwh = state.throughput_kwh + abs(power_kw) * dt_h
-        soh, efc = soh_from_throughput(self._pack, self._config, throughput_kwh)
+        soh, efc = soh_from_throughput(self._pack, self._config, throughput_kwh, self._initial_soh)
 
         next_state = BatteryState(
             time_s=state.time_s + dt_s,

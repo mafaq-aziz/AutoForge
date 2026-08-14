@@ -26,9 +26,10 @@ graph TD
   structured events. `services/vehicle/powertrain.py` is implemented
   (longitudinal force, energy, SOC, regen, power limiting), `services/battery/`
   adds the BMS-style electrical/thermal/degradation/fault view over powertrain
-  results, and `services/factory/` runs production orders through a line with
-  seeded defects, downtime, and material shortages; ADAS, fleet, market, and
-  finance land in later phases.
+  results, `services/factory/` runs production orders through a line with
+  seeded defects, downtime, and material shortages, and `services/fleet/`
+  operates finished vehicles day by day, sampling telemetry and scheduling
+  maintenance; ADAS, market, and finance land in later phases.
 - **apps/** — runnable entry points: the headless simulation app today, a
   FastAPI backend and web dashboard later.
 - **ml/** — only ML modules that have been evaluated on data; classical methods
@@ -117,6 +118,19 @@ bottleneck rather than assuming it. Finished vehicles are typed
 from the shared seeded RNG; equations and the hand-calculable reference are in
 [docs/factory.md](autoforge/docs/factory.md).
 
+## Connected fleet
+
+`services/fleet/` consumes the factory's `FinishedVehicle` records and operates
+them day by day against a scenario on the same engine. Each operating vehicle
+replays the scenario through the powertrain and battery simulators; battery
+telemetry is sampled at a configurable interval; SOC/SOH carry between days
+(SOC can deplete since no charging is modeled); and battery faults or low SOH
+schedule `MaintenanceEvent`s that take a vehicle out of service. Results are
+typed `FleetAnalytics` plus per-vehicle operations and telemetry. Fleet
+randomness is limited to the seeded operation-probability draw; the physics
+stay deterministic. Reference values are in
+[docs/fleet.md](autoforge/docs/fleet.md).
+
 ## Units and validation
 
 - Domain models are **frozen** and validated at construction; nonsense
@@ -133,10 +147,11 @@ from the shared seeded RNG; equations and the hand-calculable reference are in
    first real physics subsystem, exercising the engine end to end.
 2. **Phase 5-6 (done)**: BMS-style battery model over powertrain results, then
    the smart factory (production side of the loop).
-3. **Phase 7**: connected fleet with telemetry and fleet analytics.
-4. **apps/web**: React dashboard on top of the FastAPI app; the dashboard only
+3. **Phase 7 (done)**: connected fleet with telemetry and fleet analytics.
+4. **Phase 8**: ADAS and driver monitoring (perception vs decision separation).
+5. **apps/web**: React dashboard on top of the FastAPI app; the dashboard only
    reads what the simulation actually produces.
-5. Microservices, ROS2, CARLA, MQTT/Kafka, Redis, CUDA, or cloud services will
+6. Microservices, ROS2, CARLA, MQTT/Kafka, Redis, CUDA, or cloud services will
    only be added when a concrete requirement justifies them — not for prestige.
 
 ## Safety boundary
